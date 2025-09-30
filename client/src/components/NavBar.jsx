@@ -75,6 +75,7 @@ export default function NavBar() {
           </button>
         </div>
       </nav>
+      <Outlet />
     </>
   );
 }
