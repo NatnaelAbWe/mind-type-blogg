@@ -1,4 +1,6 @@
-import { animate, AnimatePresence, motion } from "motion/react-client";
+import { animate } from "motion/react-client";
+import { AnimatePresence, motion } from "motion/react";
+
 export default function AnimationWrapper({
   children,
   initial = { opacity: 0, scale: 0.5 },
