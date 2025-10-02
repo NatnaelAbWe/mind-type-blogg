@@ -17,6 +17,7 @@
   "version": "1.0.0",
   "description": "demo server for blogging app",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js"

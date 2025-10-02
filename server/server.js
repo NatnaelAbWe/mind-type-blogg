@@ -8,7 +8,7 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 
 // schemas
-import User from "./Schema/User";
+import User from "./Schema/User.js";
 
 const server = express();
 let PORT = 300;
