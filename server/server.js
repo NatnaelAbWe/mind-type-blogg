@@ -1,43 +1,52 @@
 import express from "express";
 import mongoose from "mongoose";
 import "dotenv/config";
-import bycrypt from "bcrypt";
+import bcrypt from "bcrypt";
 import dns from "dns";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 
-// schemas
+// Schemas
 import User from "./Schema/User.js";
 
 const server = express();
-let PORT = 300;
-let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
+const PORT = process.env.PORT || 3000;
 
+// Validation regex
+const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
+
+// Middleware
 server.use(express.json());
-server.use(cors({ origin: "http://localhost:5173" }));
+server.use(cors());
 dns.setDefaultResultOrder("ipv4first");
 
-mongoose.connect(process.env.DB_LOCATION, {
-  autoIndex: true,
-});
+// Connect to MongoDB
+mongoose
+  .connect(process.env.DB_LOCATION, { autoIndex: true })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
+// Generate username from email
 const generateUsername = async (email) => {
-  let usename = email.split("@")[0];
-  let isUsernameExists = await userInfo
-    .exists({
-      "personal_info.username": username,
-    })
-    .then((result) => result);
-
-  isUsernameExists ? (username += nanoid(5)) : "";
-
+  let username = email.split("@")[0];
+  const exists = await User.exists({ "personal_info.username": username });
+  if (exists) username += nanoid(5);
   return username;
 };
 
+// Shape the data we send back to client
 const formDatatoSend = (user) => {
-  const accessToken = jwt.sign({ id: user._id }, process.env.SECRET_ACESS_KEY);
+  if (!process.env.SECRET_ACCESS_KEY) {
+    throw new Error("SECRET_ACCESS_KEY is missing in .env");
+  }
+
+  const accessToken = jwt.sign(
+    { id: user._id },
+    process.env.SECRET_ACCESS_KEY,
+    { expiresIn: "7d" } // optional: 7-day expiry
+  );
 
   return {
     accessToken,
@@ -47,80 +56,84 @@ const formDatatoSend = (user) => {
   };
 };
 
-server.post("/signup", (req, res) => {
-  let { fullname, email, password } = req.body;
-  if (fullname.length < 3) {
-    return res
-      .status(403)
-      .json({ error: "Full Name Should be at least 3 letters long." });
-  }
+// ==================== ROUTES ==================== //
 
-  if (!email || !email.length) {
-    return res.status(403).json({ error: "Please Enter An Email Address" });
-  } else if (!emailRegex.test(email)) {
-    return res.status(403).json({ error: "Invalid Email" });
-  }
-  if (!passwordRegex.test(password)) {
-    return res.status(403).json({ error: "invalid password" });
-  }
+// SIGNUP
+server.post("/signup", async (req, res, next) => {
+  try {
+    const { fullname, email, password } = req.body;
 
-  bycrypt.hash(password, 10, async (err, hashed_password) => {
-    let userName = await generateUsername(email);
-    let user = new user({
+    // Validation
+    if (!fullname || fullname.length < 3) {
+      return res
+        .status(403)
+        .json({ error: "Full Name should be at least 3 letters long." });
+    }
+    if (!email || !emailRegex.test(email)) {
+      return res.status(403).json({ error: "Invalid Email" });
+    }
+    if (!passwordRegex.test(password)) {
+      return res.status(403).json({
+        error: "Password must be 6-20 chars, include upper, lower, and number.",
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate username
+    const userName = await generateUsername(email);
+
+    // Create user
+    const user = new User({
       personal_info: {
         fullname,
         email,
-        password: hashed_password,
+        password: hashedPassword,
         username: userName,
       },
     });
-    user
-      .save()
-      .then((u) => {
-        return res.status(200).json(formDatatoSend(u));
-      })
-      .catch((err) => {
-        if (err.code === 11000) {
-          return res.status(500).json({ error: "Email Already Exists!" });
-        }
-        return res.status(500).json({ error: err.message });
-      });
-  });
+
+    const savedUser = await user.save();
+    return res.status(200).json(formDatatoSend(savedUser));
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(500).json({ error: "Email already exists!" });
+    }
+    next(err); // Let global error handler log it
+  }
 });
 
-server.post("/signin", (req, res) => {
-  let { email, password } = req.body;
+// SIGNIN
+server.post("/signin", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-  server.post("/signin", (req, res) => {
-    let { email, password } = req.body;
+    // Find user
+    const user = await User.findOne({ "personal_info.email": email });
+    if (!user) {
+      return res.status(403).json({ error: "Email not found" });
+    }
 
-    User.findOne({ "personal_info.email": email })
-      .then((user) => {
-        if (!user) {
-          return res.status(403).json({ error: "email not found" });
-        }
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.personal_info.password);
+    if (!isMatch) {
+      return res.status(403).json({ error: "Incorrect password" });
+    }
 
-        bcrypt.compare(password, user.personal_info.password, (err, result) => {
-          if (err) {
-            return res
-              .status(403)
-              .json({ error: "Error occurr while loging please try again" });
-          }
-
-          if (!result) {
-            return res.status(403).json({ error: "Incorrect Password" });
-          } else {
-            return res.status(200).json(formDatatoSend(user));
-          }
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-        return res.status(500).json({ error: err.message });
-      });
-  });
+    return res.status(200).json(formDatatoSend(user));
+  } catch (err) {
+    next(err);
+  }
 });
 
+// ==================== ERROR HANDLER ==================== //
+server.use((err, req, res, next) => {
+  console.error("🔥 Unhandled error:", err.stack || err);
+  res.status(500).json({ error: "Something broke on the server." });
+});
+
+// ==================== START SERVER ==================== //
 server.listen(PORT, () => {
-  console.log("Listening on Port -> " + PORT);
+  console.log(`🚀 Server listening on port ${PORT}`);
 });
