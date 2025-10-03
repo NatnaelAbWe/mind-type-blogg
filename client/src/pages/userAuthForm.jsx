@@ -4,18 +4,18 @@ import { Link } from "react-router-dom";
 import InputBox from "../components/Input";
 import GoogleLogo from "../imgs/google.png";
 import { Toaster, toast } from "react-hot-toast";
+import axios from "axios";
 
 export default function UserAuthForm({ type }) {
   const AuthForm = useRef();
   function userAuthThroughServer(serverRoute, formData) {
-    fetch(`http://localhost:3000/${type}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(formData),
-    })
-      .then((res) => res.json())
-      .then((data) => console.log("server response:", data))
-      .catch((err) => console.log("error:", err));
+    axios
+      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, formData)
+
+      .then(({ data }) => {
+        console.log("server response", data);
+      })
+      .catch(({ response }) => toast.error(response.data.error));
   }
 
   function handleSubmit(e) {
@@ -23,7 +23,7 @@ export default function UserAuthForm({ type }) {
 
     let serverRoute = type === "signin" ? "/signin" : "/signup";
 
-    let form = new FormData(AuthForm.current);
+    let form = new FormData();
     let formData = {};
 
     for (let [key, value] of form.entries()) {
