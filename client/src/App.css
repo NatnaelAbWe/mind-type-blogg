@@ -69,7 +69,7 @@
   }
 
   .link {
-    @apply text-gray-400 hover:text-black hover:bg-gray-500 p-3 px-4 block opacity-75;
+    @apply text-gray-400 hover:text-black hover:bg-yellow-200 p-3 px-4 block opacity-75;
   }
 
   .hide {
