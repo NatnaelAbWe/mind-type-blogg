@@ -9,8 +9,12 @@ import axios from "axios";
 export default function UserAuthForm({ type }) {
   const AuthForm = useRef();
   function userAuthThroughServer(serverRoute, formData) {
+    console.log("form data sent", formData);
     axios
-      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, formData)
+      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, (formData) => {
+        delete formData.confirmPassword;
+        return formData;
+      })
 
       .then(({ data }) => {
         console.log("server response", data);
@@ -23,17 +27,18 @@ export default function UserAuthForm({ type }) {
 
     let serverRoute = type === "signin" ? "/signin" : "/signup";
 
-    let form = new FormData();
+    let form = new FormData(AuthForm.current);
     let formData = {};
 
     for (let [key, value] of form.entries()) {
       formData[key] = value.trim();
     }
+    console.log(formData);
 
     // form validation
     let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,})+$/;
     let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
-    let { fullname, email, password } = formData;
+    let { fullname, email, password, confirmPassword } = formData;
 
     if (type === "signup" && (!fullname || fullname.length < 3)) {
       return toast.error("Full Name must be at least 3 characters long.");
@@ -51,9 +56,14 @@ export default function UserAuthForm({ type }) {
       );
     }
 
+    if (type === "signup" && password !== confirmPassword) {
+      return toast.error("Passwords do not match.");
+    }
+
     //  Passed validation
-    console.log("Form data ready to send:", formData);
-    userAuthThroughServer(serverRoute, formData);
+    const { confirmPassword: _, ...dataToSend } = formData;
+    console.log("Form data ready to send:", dataToSend);
+    userAuthThroughServer(serverRoute, dataToSend);
   }
 
   return (
@@ -83,12 +93,24 @@ export default function UserAuthForm({ type }) {
             required
           />
           <InputBox
+            id="password"
             name="password"
             type="password"
             placeholder="Password"
             icon="ff-rr-key"
             required
           />
+          {type === "signup" ? (
+            <InputBox
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm Password"
+              icon="ff-rr-key"
+            />
+          ) : (
+            ""
+          )}
 
           <button
             className="btn-dark center mt-14"
