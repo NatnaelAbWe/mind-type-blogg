@@ -1,13 +1,87 @@
 import AnimationWrapper from "../common/page-animation";
-import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useRef } from "react";
+import { Link, Navigate } from "react-router-dom";
 import InputBox from "../components/Input";
 import GoogleLogo from "../imgs/google.png";
+import { Toaster, toast } from "react-hot-toast";
+import axios from "axios";
+import { storeInSession } from "../common/session";
+import { userContext } from "../App";
+
 export default function UserAuthForm({ type }) {
   const AuthForm = useRef();
-  return (
+
+  let {
+    userAuth: { accessToken },
+    setUserAuth,
+  } = useContext(userContext);
+
+  console.log(accessToken);
+
+  function userAuthThroughServer(serverRoute, formData) {
+    console.log("form data sent", formData);
+    axios
+      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, formData)
+
+      .then(({ data }) => {
+        // console.log("server response", data);
+        storeInSession("user", JSON.stringify(data));
+        // console.log(sessionStorage);
+        setUserAuth(data);
+      })
+      .catch(({ response }) => toast.error(response.data.error));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    let serverRoute = type === "signin" ? "/signin" : "/signup";
+
+    let form = new FormData(AuthForm.current);
+    let formData = {};
+
+    for (let [key, value] of form.entries()) {
+      formData[key] = value.trim();
+    }
+    console.log(formData);
+
+    // form validation
+    let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,})+$/;
+    let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
+    let { fullname, email, password, confirmPassword } = formData;
+
+    if (type === "signup" && (!fullname || fullname.length < 3)) {
+      return toast.error("Full Name must be at least 3 characters long.");
+    }
+
+    if (!email) {
+      return toast.error("Enter an Email.");
+    } else if (!emailRegex.test(email)) {
+      return toast("Invalid Email format.");
+    }
+
+    if (!passwordRegex.test(password)) {
+      return toast.error(
+        "Password must be 6–20 characters, include a number, lowercase and uppercase letter."
+      );
+    }
+
+    if (type === "signup" && password !== confirmPassword) {
+      return toast.error("Passwords do not match.");
+    }
+
+    //  Passed validation
+    const { confirmPassword: _, ...dataToSend } = formData;
+    console.log("Form data ready to send:", dataToSend);
+    userAuthThroughServer(serverRoute, dataToSend);
+  }
+
+  return accessToken ? (
+    <Navigate to="/" />
+  ) : (
     <AnimationWrapper>
       <section className="h-cover flex item-center justify-center">
+        <Toaster />
         <form ref={AuthForm} className="w-[80%] max-w-[400px]">
           <h1 className="text-4xl font-glasio capitalize text-center mb-4 mt-4">
             {type === "signin" ? "Welcome Back" : "Join Us Today"}
@@ -31,17 +105,29 @@ export default function UserAuthForm({ type }) {
             required
           />
           <InputBox
+            id="password"
             name="password"
             type="password"
             placeholder="Password"
             icon="ff-rr-key"
             required
           />
+          {type === "signup" ? (
+            <InputBox
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm Password"
+              icon="ff-rr-key"
+            />
+          ) : (
+            ""
+          )}
 
           <button
             className="btn-dark center mt-14"
             type="submit"
-            // onClick={handleSubmit}
+            onClick={handleSubmit}
           >
             {type === "signin" ? "Sign In" : "Sign up"}
           </button>
