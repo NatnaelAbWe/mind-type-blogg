@@ -6,12 +6,23 @@ import UserNavigationPanel from "./UserNavigation";
 
 export default function NavBar() {
   const [searchBoxVisiblity, setSearchBoxVisiblity] = useState(true);
+  const [userNavPannel, setUserNavPannel] = useState(false);
   const [dark, setDark] = useState(false);
 
   const {
     userAuth,
     userAuth: { accessToken, profile_img },
   } = useContext(userContext);
+
+  function handleClick() {
+    setUserNavPannel((prev) => !prev);
+  }
+
+  function handleBlur() {
+    setTimeout(() => {
+      setUserNavPannel(false);
+    }, 200);
+  }
 
   return (
     <>
@@ -62,14 +73,18 @@ export default function NavBar() {
                 </button>
               </Link>
 
-              <div className="relative">
+              <div
+                className="relative"
+                onClick={handleClick}
+                onBlur={handleBlur}
+              >
                 <button className="w-12 h-12 mt-1">
                   <img
                     src={profile_img}
                     className="w-full h-full object-cover rounded-full"
                   />
                 </button>
-                <UserNavigationPanel />
+                {userNavPannel ? <UserNavigationPanel /> : ""}
               </div>
             </>
           ) : (
