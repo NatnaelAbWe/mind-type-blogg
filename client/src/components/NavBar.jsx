@@ -1,10 +1,17 @@
 import { Link, Outlet } from "react-router-dom";
 import logo from "../assets/logo.jpg";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { userContext } from "../App";
+import UserNavigationPanel from "./UserNavigation";
 
 export default function NavBar() {
   const [searchBoxVisiblity, setSearchBoxVisiblity] = useState(true);
   const [dark, setDark] = useState(false);
+
+  const {
+    userAuth,
+    userAuth: { accessToken, profile_img },
+  } = useContext(userContext);
 
   return (
     <>
@@ -47,32 +54,56 @@ export default function NavBar() {
             <i className="fi fi-sr-pen-clip"></i>
           </Link>
 
-          <Link to="/signin" className="btn-dark py-2">
-            sign In
-          </Link>
-          <Link
-            to="/signUp"
-            className="btn-light btn-dark py-2 hidden md:block"
-          >
-            sign Up
-          </Link>
-          <button
-            onClick={() => setDark((darkVal) => !darkVal)}
-            className={
-              "relative w-16 h-8 rounded-full flex items-center px-1 transition-colors duration-300 border border-black " +
-              (dark ? "bg-black" : "bg-white")
-            }
-          >
-            <span
-              className={`absolute w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
-                dark ? "translate-x-8" : "translate-x-0"
-              }`}
-            >
-              <span className="flex items-center justify-center w-full h-full text-sm">
-                {dark ? "🌛" : "🌞"}
-              </span>
-            </span>
-          </button>
+          {accessToken ? (
+            <>
+              <Link to="/dashboard/notification">
+                <button className="w-12 h-12 rounded-full bg-gray-50 relative hover:bg-black/10">
+                  <i className="fi fi-rr-bell text-2xl block mt-1"></i>
+                </button>
+              </Link>
+
+              <div className="relative">
+                <button className="w-12 h-12 mt-1">
+                  <img
+                    src={profile_img}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </button>
+                <UserNavigationPanel />
+              </div>
+            </>
+          ) : (
+            <>
+              <Link to="/signin" className="btn-dark py-2">
+                sign In
+              </Link>
+              <Link
+                to="/signUp"
+                className="btn-light btn-dark py-2 hidden md:block"
+              >
+                sign Up
+              </Link>
+              <div>
+                <button
+                  onClick={() => setDark((darkVal) => !darkVal)}
+                  className={
+                    "relative w-16 h-8 rounded-full flex items-center px-1 transition-colors duration-300 border border-black " +
+                    (dark ? "bg-black" : "bg-white")
+                  }
+                >
+                  <span
+                    className={`absolute w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+                      dark ? "translate-x-8" : "translate-x-0"
+                    }`}
+                  >
+                    <span className="flex items-center justify-center w-full h-full text-sm">
+                      {dark ? "🌛" : "🌞"}
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </nav>
       <Outlet />
