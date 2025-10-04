@@ -11,10 +11,7 @@ export default function UserAuthForm({ type }) {
   function userAuthThroughServer(serverRoute, formData) {
     console.log("form data sent", formData);
     axios
-      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, (formData) => {
-        delete formData.confirmPassword;
-        return formData;
-      })
+      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, formData)
 
       .then(({ data }) => {
         console.log("server response", data);
