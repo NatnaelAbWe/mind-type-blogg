@@ -7,12 +7,22 @@ import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import admin from "firebase-admin";
-import serviceAccountKey from "./mind-type-blogg-webapp-firebase-adminsdk-fbsvc-409a813759.json";
+import fs from "fs";
+
+const serviceAccountKey = JSON.parse(
+  fs.readFileSync(
+    new URL(
+      "./mind-type-blogg-webapp-firebase-adminsdk-fbsvc-409a813759.json",
+      import.meta.url
+    )
+  )
+);
+
 import { getAuth } from "firebase-admin/auth";
 
 // Schemas
 import User from "./Schema/User.js";
-import { use } from "react";
+// import { use } from "react";
 
 const server = express();
 const PORT = process.env.PORT || 3000;
@@ -146,8 +156,7 @@ server.post("/google-auth", async (req, res) => {
       let { email, name, picture } = decodeUser;
 
       picture = picture.replace("s96-c", "s384-c");
-      let user = await user
-        .findOne({ "personal_info.email": email })
+      let user = await User.findOne({ "personal_info.email": email })
         .select(
           "persomal_info.fullname personal_info.username personal_info.profile_img google_auth"
         )
@@ -191,12 +200,10 @@ server.post("/google-auth", async (req, res) => {
       return res.status(200).json(formDatatoSend(user));
     })
     .catch((err) => {
-      return res
-        .status(500)
-        .json({
-          error:
-            "failed to authenticate you with google account try with other account",
-        });
+      return res.status(500).json({
+        error:
+          "failed to authenticate you with google account try with other account",
+      });
     });
 });
 
