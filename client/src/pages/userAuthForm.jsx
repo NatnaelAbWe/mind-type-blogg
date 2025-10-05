@@ -7,16 +7,29 @@ import { Toaster, toast } from "react-hot-toast";
 import axios from "axios";
 import { storeInSession } from "../common/session";
 import { userContext } from "../App";
+import { authWithGoogle } from "../common/firebase";
 
 export default function UserAuthForm({ type }) {
   const AuthForm = useRef();
+
+  function handleGoogleAuth(e) {
+    e.preventDefault();
+    authWithGoogle()
+      .then((user) => {
+        console.log(user);
+      })
+      .catch((err) => {
+        toast.error("Trouble Login Through Google");
+        console.log(err);
+      });
+  }
 
   let {
     userAuth: { accessToken },
     setUserAuth,
   } = useContext(userContext);
 
-  console.log(accessToken);
+  // console.log(accessToken);
 
   function userAuthThroughServer(serverRoute, formData) {
     console.log("form data sent", formData);
@@ -136,7 +149,10 @@ export default function UserAuthForm({ type }) {
             <p>Or</p>
             <hr className="w-1/2 border-black" />
           </div>
-          <button className="btn-dark flex items-center gap-4 justify-center center">
+          <button
+            className="btn-dark flex items-center gap-4 justify-center center"
+            onClick={handleGoogleAuth}
+          >
             <img src={GoogleLogo} alt="Google logo" loading="lazy" />
             Continue With Google
           </button>
