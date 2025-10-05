@@ -6,12 +6,21 @@ import dns from "dns";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import admin from "firebase-admin";
+import serviceAccountKey from "./mind-type-blogg-webapp-firebase-adminsdk-fbsvc-409a813759.json";
+import { getAuth } from "firebase-admin/auth";
 
 // Schemas
 import User from "./Schema/User.js";
+import { use } from "react";
 
 const server = express();
 const PORT = process.env.PORT || 3000;
+
+// intialize firebase Admin
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccountKey),
+});
 
 // Validation regex
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -108,6 +117,7 @@ server.post("/signup", async (req, res, next) => {
 server.post("/signin", async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    // console.log(req)
 
     // Find user
     const user = await User.findOne({ "personal_info.email": email });
@@ -125,6 +135,69 @@ server.post("/signin", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+server.post("/google-auth", async (req, res) => {
+  let { accessToken } = req.body;
+
+  getAuth()
+    .verifyIdToken(accessToken)
+    .then(async (decodeUser) => {
+      let { email, name, picture } = decodeUser;
+
+      picture = picture.replace("s96-c", "s384-c");
+      let user = await user
+        .findOne({ "personal_info.email": email })
+        .select(
+          "persomal_info.fullname personal_info.username personal_info.profile_img google_auth"
+        )
+        .then((u) => {
+          return u || null;
+        })
+        .catch((err) => {
+          return res.status(500).json({ error: err.message });
+        });
+      if (user) {
+        if (!user.google_auth) {
+          // login
+          return res.status(403).json({
+            error:
+              "This email was signed up without google. please log in with password to acess the account",
+          });
+        }
+      } else {
+        // sign up
+        let username = await generateUsername(email);
+
+        user = new User({
+          personal_info: {
+            fullname: name,
+            email,
+            profile_img: picture,
+            username,
+          },
+          google_auth: true,
+        });
+
+        await user
+          .save()
+          .then((u) => {
+            user = u;
+          })
+          .catch((err) => {
+            return res.status(500).json({ error: err.message });
+          });
+      }
+      return res.status(200).json(formDatatoSend(user));
+    })
+    .catch((err) => {
+      return res
+        .status(500)
+        .json({
+          error:
+            "failed to authenticate you with google account try with other account",
+        });
+    });
 });
 
 // ==================== ERROR HANDLER ==================== //
