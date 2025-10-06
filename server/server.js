@@ -135,76 +135,79 @@ server.post("/signin", async (req, res, next) => {
       return res.status(403).json({ error: "Email not found" });
     }
 
-    // Compare password
-    const isMatch = await bcrypt.compare(password, user.personal_info.password);
-    if (!isMatch) {
-      return res.status(403).json({ error: "Incorrect password" });
-    }
+    if (!user.google_auth) {
+      // Compare password
+      const isMatch = await bcrypt.compare(
+        password,
+        user.personal_info.password
+      );
+      if (!isMatch) {
+        return res.status(403).json({ error: "Incorrect password" });
+      }
 
-    return res.status(200).json(formDatatoSend(user));
+      return res.status(200).json(formDatatoSend(user));
+    } else {
+      return res
+        .status(403)
+        .json({
+          error: "The Account Was Created with google pls sign in from Google",
+        });
+    }
   } catch (err) {
     next(err);
   }
 });
 
 server.post("/google-auth", async (req, res) => {
-  let { accessToken } = req.body;
+  try {
+    const { accessToken } = req.body;
 
-  getAuth()
-    .verifyIdToken(accessToken)
-    .then(async (decodeUser) => {
-      let { email, name, picture } = decodeUser;
+    // Verify the Google token
+    const decodedUser = await getAuth().verifyIdToken(accessToken);
 
-      picture = picture.replace("s96-c", "s384-c");
-      let user = await User.findOne({ "personal_info.email": email })
-        .select(
-          "persomal_info.fullname personal_info.username personal_info.profile_img google_auth"
-        )
-        .then((u) => {
-          return u || null;
-        })
-        .catch((err) => {
-          return res.status(500).json({ error: err.message });
-        });
-      if (user) {
-        if (!user.google_auth) {
-          // login
-          return res.status(403).json({
-            error:
-              "This email was signed up without google. please log in with password to acess the account",
-          });
-        }
-      } else {
-        // sign up
-        let username = await generateUsername(email);
+    let { email, name, picture } = decodedUser;
+    picture = picture.replace("s96-c", "s384-c");
 
-        user = new User({
-          personal_info: {
-            fullname: name,
-            email,
-            profile_img: picture,
-            username,
-          },
-          google_auth: true,
-        });
+    // Check if the user already exists
+    let user = await User.findOne({
+      "personal_info.email": email,
+    }).select(
+      "personal_info.fullname personal_info.username personal_info.profile_img google_auth"
+    );
 
-        await user
-          .save()
-          .then((u) => {
-            user = u;
-          })
-          .catch((err) => {
-            return res.status(500).json({ error: err.message });
-          });
-      }
-      return res.status(200).json(formDatatoSend(user));
-    })
-    .catch((err) => {
-      return res.status(500).json({
+    // If user exists but didn't sign up with Google
+    if (user && !user.google_auth) {
+      return res.status(403).json({
         error:
-          "failed to authenticate you with google account try with other account",
+          "This email was signed up without Google. Please log in with your password instead.",
       });
+    }
+
+    // If user doesn’t exist → sign up new Google user
+    if (!user) {
+      const username = await generateUsername(email);
+
+      user = new User({
+        personal_info: {
+          fullname: name,
+          email,
+          username,
+        },
+        google_auth: true,
+      });
+
+      await user.save();
+    }
+
+    // Respond once — success
+    return res.status(200).json(formDatatoSend(user));
+  } catch (err) {
+    console.error("🔥 Google Auth Error:", err.message);
+    return res.status(500).json({
+      error:
+        "Failed to authenticate with your Google account. Try again or use another method.",
     });
+  }
 });
 
 // ==================== ERROR HANDLER ==================== //
