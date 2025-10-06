@@ -135,13 +135,24 @@ server.post("/signin", async (req, res, next) => {
       return res.status(403).json({ error: "Email not found" });
     }
 
-    // Compare password
-    const isMatch = await bcrypt.compare(password, user.personal_info.password);
-    if (!isMatch) {
-      return res.status(403).json({ error: "Incorrect password" });
-    }
+    if (!user.google_auth) {
+      // Compare password
+      const isMatch = await bcrypt.compare(
+        password,
+        user.personal_info.password
+      );
+      if (!isMatch) {
+        return res.status(403).json({ error: "Incorrect password" });
+      }
 
-    return res.status(200).json(formDatatoSend(user));
+      return res.status(200).json(formDatatoSend(user));
+    } else {
+      return res
+        .status(403)
+        .json({
+          error: "The Account Was Created with google pls sign in from Google",
+        });
+    }
   } catch (err) {
     next(err);
   }
@@ -180,7 +191,6 @@ server.post("/google-auth", async (req, res) => {
         personal_info: {
           fullname: name,
           email,
-          profile_img: picture,
           username,
         },
         google_auth: true,
