@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.jpg";
+import AnimationWrapper from "../common/page-animation";
+import banner from "../assets/blog banner.png";
 
 export default function BloggEditor() {
+  const handleBannerUpload = (e) => {
+    let img = e.target.files[0];
+    console.log(img);
+  };
   return (
     <>
       <nav className="navbar">
@@ -19,6 +25,29 @@ export default function BloggEditor() {
           </button>
         </div>
       </nav>
+      <AnimationWrapper>
+        <section className="md:mx-[20%]">
+          <div className="max-w-[900px] w-full flex align-middle">
+            <div className="relative aspect-video bg-white border-4 border-gray-500 hover:opacity-80">
+              <label htmlFor="uploadBanner">
+                <img
+                  src={banner}
+                  className="z-20
+                "
+                />
+                <input
+                  id="uploadBanner"
+                  type="file"
+                  accept=".png .jpg .jpeg"
+                  className="bg-gray-400"
+                  hidden
+                  onChange={handleBannerUpload}
+                />
+              </label>
+            </div>
+          </div>
+        </section>
+      </AnimationWrapper>
     </>
   );
 }
