@@ -1,8 +1,12 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { userContext } from "../App";
 import { Navigate } from "react-router-dom";
+import PublishForm from "../components/PublishForm";
+import BloggEditor from "../components/BloggEditor";
 
 export default function Editor() {
+  const [editorState, setEditorState] = useState("editor");
+
   const {
     userAuth: { accessToken },
   } = useContext(userContext);
@@ -10,8 +14,10 @@ export default function Editor() {
     <div>
       {accessToken === null ? (
         <Navigate to="/signin" />
+      ) : editorState == "editor" ? (
+        <BloggEditor />
       ) : (
-        <h1>You Can Access the Editor Page</h1>
+        <PublishForm />
       )}
     </div>
   );
