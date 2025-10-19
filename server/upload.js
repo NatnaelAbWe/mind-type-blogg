@@ -5,6 +5,8 @@ import { dbPool } from "./Schema/db.js";
 
 const router = express.Router();
 
+router.use("/upload", express.static("upload"));
+
 // set up multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -25,6 +27,10 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "no file uploaded" });
     }
 
+    const fileUrl = `${req.protocol}://${req.get("host")}/upload/${
+      file.filename
+    }`;
+
     const query = `
         INSERT INTO uploads (filename, file_type, file_size, file_path, uploaded_by) VALUES(?,?,?,?,?);`;
 
@@ -32,7 +38,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       file.filename,
       file.mimetype,
       file.size,
-      file.path,
+      fileUrl,
       req.body.uploadedby || null,
     ];
 
@@ -40,11 +46,11 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
     res.json({
       message: "✅ File uploaded and metadata saved successfully!",
+      url: fileUrl,
       file: {
         name: file.filename,
         type: file.mimetype,
         size: file.size,
-        path: file.path,
       },
     });
   } catch (err) {
