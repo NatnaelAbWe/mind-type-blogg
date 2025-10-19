@@ -1,4 +1,4 @@
-import { dbPool } from "./db";
+import { dbPool } from "./db.js";
 
 export async function metaDataTable() {
   try {
