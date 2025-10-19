@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import admin from "firebase-admin";
 import fs from "fs";
+import { metaDataTable } from "./Schema/initialDb.js";
+import uploadRoute from "./upload.js";
 
 const serviceAccountKey = JSON.parse(
   fs.readFileSync(
@@ -25,7 +27,7 @@ import User from "./Schema/User.js";
 // import { use } from "react";
 
 const server = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.BE_PORT || 3000;
 
 // intialize firebase Admin
 admin.initializeApp({
@@ -74,6 +76,9 @@ const formDatatoSend = (user) => {
     fullname: user.personal_info.fullname,
   };
 };
+
+// run the setup once at the start
+metaDataTable();
 
 // ==================== ROUTES ==================== //
 
@@ -147,11 +152,9 @@ server.post("/signin", async (req, res, next) => {
 
       return res.status(200).json(formDatatoSend(user));
     } else {
-      return res
-        .status(403)
-        .json({
-          error: "The Account Was Created with google pls sign in from Google",
-        });
+      return res.status(403).json({
+        error: "The Account Was Created with google pls sign in from Google",
+      });
     }
   } catch (err) {
     next(err);
@@ -209,6 +212,10 @@ server.post("/google-auth", async (req, res) => {
     });
   }
 });
+
+// img Upload route
+server.use("/uploads", express.static("uploads")); // serve uploaded files
+server.use(uploadRoute);
 
 // ==================== ERROR HANDLER ==================== //
 server.use((err, req, res, next) => {

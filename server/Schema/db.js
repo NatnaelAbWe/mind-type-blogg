@@ -16,6 +16,7 @@ export const dbPool = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
+  multipleStatements: true,
 });
 
 // test database connection on startup
