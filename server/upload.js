@@ -2,8 +2,10 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import { dbPool } from "./Schema/db.js";
+import { nanoid } from "nanoid";
 
 const router = express.Router();
+// console.log(nanoid());
 
 router.use("/upload", express.static("upload"));
 
@@ -13,7 +15,7 @@ const storage = multer.diskStorage({
     cb(null, "./upload");
   },
   filename: function (req, file, cb) {
-    const uniqueName = Date.now() + "-" + file.originalname;
+    const uniqueName = nanoid() + "-" + Date.now() + "-" + file.originalname;
     cb(null, uniqueName);
   },
 });
