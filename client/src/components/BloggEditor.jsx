@@ -1,18 +1,33 @@
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.jpg";
 import AnimationWrapper from "../common/page-animation";
-import banner from "../assets/blog banner.png";
+import bannerImg from "../assets/blog banner.png";
 import { useState } from "react";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
+import { useContext } from "react";
+import { EditorContext } from "../pages/Editor";
 
 export default function BloggEditor() {
-  const [bannerPreview, setBannerPreview] = useState(banner);
+  let {
+    blog,
+    blog: { title, banner, content, tags, des },
+    setBlog,
+  } = useContext(EditorContext);
+
+  const [bannerPreview, setBannerPreview] = useState(bannerImg);
   const [isUploading, setIsUploading] = useState(false);
+
+  const handleTitleChange = (e) => {
+    let input = e.target;
+    input.style.height = input.scrollHeight + "px";
+
+    setBlog({ ...blog, title: input.value });
+  };
 
   const handleTitleKeyDOwn = (e) => {
     if (e.keyCode === 13) {
-      // e.preventDefault();
+      e.preventDefault();
     }
   };
 
@@ -37,8 +52,9 @@ export default function BloggEditor() {
 
       // replace preview with the actual uploaded URL
       setBannerPreview(res.data.url);
+      setBlog({ ...blog, banner: res.data.url });
 
-      toast.successs("✅ Uploaded banner URL:", res.data.url);
+      toast.success("✅ Uploaded banner URL:", res.data.url);
     } catch (err) {
       console.error("❌ Upload failed:", err.message);
       toast.error("Upload failed. Please try again.");
@@ -55,7 +71,7 @@ export default function BloggEditor() {
           <img src={logo} className="w-24 h-auto" loading="lazy" alt="logo" />
         </Link>
         <p className="max-md:hidden text-black line-clamp-1 w-full">
-          New Blogg
+          {title.length ? title : "New Blogg"}
         </p>
 
         <div className="flex gap-4 ml-auto">
@@ -68,12 +84,12 @@ export default function BloggEditor() {
 
       <AnimationWrapper>
         <section className="md:mx-[20%]">
-          <div className="max-w-[900px] w-full flex flex-col md:flex-row align-middle">
+          <div className="max-w-[900px] w-full flex flex-col align-middle">
             <div className="relative aspect-video bg-white border-4 border-gray-500 hover:opacity-80">
               <label htmlFor="uploadBanner">
                 {/* dynamic banner preview */}
                 <img
-                  src={bannerPreview}
+                  src={banner}
                   alt="blog banner"
                   className="z-20 w-full h-full object-cover"
                 />
@@ -93,7 +109,7 @@ export default function BloggEditor() {
             </div>
             <textarea
               placeholder="Block Title"
-              className="text-4xl border font-medium w-full h-20 outline-none resize-none bg-gray-300 mt-10 leading-tight placeholder:opacity-40 placeholder:text-center border-gray-300"
+              className="text-4xl border font-medium w-full h-20 outline-none resize-none bg-gray-300 mt-10 leading-tight placeholder:opacity-40 placeholder:text-center border-gray-300 no-scrollbar pl-3 pr-3"
               onKeyDown={handleTitleKeyDOwn}
               onChange={handleTitleChange}
             ></textarea>
