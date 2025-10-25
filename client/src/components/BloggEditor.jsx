@@ -4,15 +4,23 @@ import AnimationWrapper from "../common/page-animation";
 import banner from "../assets/blog banner.png";
 import { useState } from "react";
 import axios from "axios";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function BloggEditor() {
   const [bannerPreview, setBannerPreview] = useState(banner);
   const [isUploading, setIsUploading] = useState(false);
 
+  const handleTitleKeyDOwn = (e) => {
+    if (e.keyCode === 13) {
+      // e.preventDefault();
+    }
+  };
+
   const handleBannerUpload = async (e) => {
     const img = e.target.files[0];
-    if (!img) return;
-
+    if (!img) {
+      toast.loading("Uploading...");
+    }
     // show local preview immediately
     setBannerPreview(URL.createObjectURL(img));
     setIsUploading(true);
@@ -29,10 +37,11 @@ export default function BloggEditor() {
 
       // replace preview with the actual uploaded URL
       setBannerPreview(res.data.url);
-      console.log("✅ Uploaded banner URL:", res.data.url);
+
+      toast.successs("✅ Uploaded banner URL:", res.data.url);
     } catch (err) {
       console.error("❌ Upload failed:", err.message);
-      alert("Upload failed. Please try again.");
+      toast.error("Upload failed. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -40,6 +49,7 @@ export default function BloggEditor() {
 
   return (
     <>
+      <Toaster />
       <nav className="navbar">
         <Link to="/">
           <img src={logo} className="w-24 h-auto" loading="lazy" alt="logo" />
@@ -58,7 +68,7 @@ export default function BloggEditor() {
 
       <AnimationWrapper>
         <section className="md:mx-[20%]">
-          <div className="max-w-[900px] w-full flex align-middle">
+          <div className="max-w-[900px] w-full flex flex-col md:flex-row align-middle">
             <div className="relative aspect-video bg-white border-4 border-gray-500 hover:opacity-80">
               <label htmlFor="uploadBanner">
                 {/* dynamic banner preview */}
@@ -81,6 +91,12 @@ export default function BloggEditor() {
                 />
               </label>
             </div>
+            <textarea
+              placeholder="Block Title"
+              className="text-4xl border font-medium w-full h-20 outline-none resize-none bg-gray-300 mt-10 leading-tight placeholder:opacity-40 placeholder:text-center border-gray-300"
+              onKeyDown={handleTitleKeyDOwn}
+              onChange={handleTitleChange}
+            ></textarea>
           </div>
         </section>
       </AnimationWrapper>
