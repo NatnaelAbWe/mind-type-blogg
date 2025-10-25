@@ -6,6 +6,16 @@
   --font-gelasio: "gelasio", sans-serif;
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 @layer components {
   * {
     @apply m-0 p-0 box-border text-base outline-purple-500/30 duration-100;
