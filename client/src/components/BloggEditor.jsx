@@ -2,11 +2,12 @@ import { Link } from "react-router-dom";
 import logo from "../assets/logo.jpg";
 import AnimationWrapper from "../common/page-animation";
 import bannerImg from "../assets/blog banner.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
 import { useContext } from "react";
 import { EditorContext } from "../pages/Editor";
+import Editorjs from "@editorjs/editorjs";
 
 export default function BloggEditor() {
   let {
@@ -14,6 +15,16 @@ export default function BloggEditor() {
     blog: { title, banner, content, tags, des },
     setBlog,
   } = useContext(EditorContext);
+
+  // UseEffect Hook
+
+  useEffect(() => {
+    const editor = new Editorjs({
+      holderId: "textEditor",
+      data: "",
+      placeholder: "Let's Write an Awsome Story.",
+    });
+  }, []);
 
   const [bannerPreview, setBannerPreview] = useState(bannerImg);
   const [isUploading, setIsUploading] = useState(false);
@@ -113,6 +124,10 @@ export default function BloggEditor() {
               onKeyDown={handleTitleKeyDOwn}
               onChange={handleTitleChange}
             ></textarea>
+
+            <hr className="w-full opacity-10 my-1 border-b-black" />
+
+            <div id="textEditor" className="font-gelasio "></div>
           </div>
         </section>
       </AnimationWrapper>
