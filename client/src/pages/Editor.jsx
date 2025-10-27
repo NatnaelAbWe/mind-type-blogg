@@ -7,7 +7,7 @@ import BloggEditor from "../components/BloggEditor";
 
 const blogStructure = {
   title: "",
-  banner: "",
+  banner: banner,
   content: [],
   tags: [],
   des: "",
