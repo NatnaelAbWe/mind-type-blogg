@@ -8,6 +8,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { useContext } from "react";
 import { EditorContext } from "../pages/Editor";
 import Editorjs from "@editorjs/editorjs";
+import { tools } from "./Tools";
 
 export default function BloggEditor() {
   let {
@@ -22,6 +23,7 @@ export default function BloggEditor() {
     const editor = new Editorjs({
       holderId: "textEditor",
       data: "",
+      tools: tools,
       placeholder: "Let's Write an Awsome Story.",
     });
   }, []);
