@@ -15,17 +15,22 @@ export default function BloggEditor() {
     blog,
     blog: { title, banner, content, tags, des },
     setBlog,
+    textEditor,
+    setTextEditor,
+    setEditorState,
   } = useContext(EditorContext);
 
   // UseEffect Hook
 
   useEffect(() => {
-    const editor = new Editorjs({
-      holderId: "textEditor",
-      data: "",
-      tools: tools,
-      placeholder: "Let's Write an Awsome Story.",
-    });
+    setTextEditor(
+      new Editorjs({
+        holderId: "textEditor",
+        data: "",
+        tools: tools,
+        placeholder: "Let's Write an Awsome Story.",
+      })
+    );
   }, []);
 
   const [bannerPreview, setBannerPreview] = useState(bannerImg);
@@ -76,6 +81,27 @@ export default function BloggEditor() {
     }
   };
 
+  const handlePublishEvent = (e) => {
+    e.preventDefault();
+    if (!banner.length) {
+      return toast.error("upload Banner image to publish it");
+    }
+    if (!title.length) {
+      return toast.error("Pls Include a title in your post to publish");
+    }
+
+    if (textEditor.isReady) {
+      textEditor.save().then((data) => {
+        if (data.blocks.length) {
+          setBlog({ ...blog, content: data });
+          setEditorState("publish");
+        } else {
+          return toast.error("Write something in your blogg to publish it");
+        }
+      });
+    }
+  };
+
   return (
     <>
       <Toaster />
@@ -88,7 +114,12 @@ export default function BloggEditor() {
         </p>
 
         <div className="flex gap-4 ml-auto">
-          <button className="btn-dark py-2 hover:bg-gray-500">Publish</button>
+          <button
+            className="btn-dark py-2 hover:bg-gray-500"
+            onClick={handlePublishEvent}
+          >
+            Publish
+          </button>
           <button className="btn-light btn-dark py-2 hover:bg-amber-500">
             Save Draft
           </button>
@@ -102,7 +133,7 @@ export default function BloggEditor() {
               <label htmlFor="uploadBanner">
                 {/* dynamic banner preview */}
                 <img
-                  src={banner}
+                  src={banner.length ? banner : bannerImg}
                   alt="blog banner"
                   className="z-20 w-full h-full object-cover"
                 />

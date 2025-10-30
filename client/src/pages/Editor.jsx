@@ -7,7 +7,7 @@ import BloggEditor from "../components/BloggEditor";
 
 const blogStructure = {
   title: "",
-  banner: banner,
+  banner: "",
   content: [],
   tags: [],
   des: "",
@@ -19,6 +19,7 @@ export const EditorContext = createContext({});
 export default function Editor() {
   const [editorState, setEditorState] = useState("editor");
   const [blog, setBlog] = useState(blogStructure);
+  const [textEditor, setTextEditor] = useState({ isReady: false });
 
   const {
     userAuth: { accessToken },
@@ -26,7 +27,14 @@ export default function Editor() {
   return (
     <div>
       <EditorContext.Provider
-        value={{ blog, setBlog, editorState, setEditorState }}
+        value={{
+          blog,
+          setBlog,
+          editorState,
+          setEditorState,
+          textEditor,
+          setTextEditor,
+        }}
       >
         {accessToken === null ? (
           <Navigate to="/signin" />
