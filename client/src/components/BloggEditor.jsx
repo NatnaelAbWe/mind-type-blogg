@@ -26,7 +26,7 @@ export default function BloggEditor() {
     setTextEditor(
       new Editorjs({
         holderId: "textEditor",
-        data: "",
+        data: content,
         tools: tools,
         placeholder: "Let's Write an Awsome Story.",
       })
@@ -152,6 +152,7 @@ export default function BloggEditor() {
               </label>
             </div>
             <textarea
+              defaultValue={title}
               placeholder="Block Title"
               className="text-4xl border font-medium w-full h-20 outline-none resize-none bg-gray-300 mt-10 leading-tight placeholder:opacity-40 placeholder:text-center border-gray-300 no-scrollbar pl-3 pr-3"
               onKeyDown={handleTitleKeyDOwn}
