@@ -6,6 +6,7 @@ import Tag from "./Tag";
 
 export default function PublishForm() {
   const charLim = 250;
+  let tagLimit = 10;
   let {
     setEditorState,
     blog,
@@ -33,6 +34,24 @@ export default function PublishForm() {
   const handleTitleKeyDOwn = (e) => {
     if (e.keyCode === 13) {
       e.preventDefault();
+    }
+  };
+
+  const handleTagAdd = (e) => {
+    const input = e.target;
+    if (e.keyCode === 13 || e.keyCode === 188) {
+      e.preventDefault();
+      const newTag = input.value.trim().replace(/,$/, "");
+
+      if (newTag.length && !tags.includes(newTag)) {
+        if (tags.length < tagLimit) {
+          setBlog({ ...blog, tags: [...tags, newTag] });
+        } else {
+          toast.error("You can’t add more than 10 tags");
+        }
+      }
+
+      input.value = "";
     }
   };
   return (
@@ -79,16 +98,19 @@ export default function PublishForm() {
             onKeyDown={handleTitleKeyDOwn}
           ></textarea>
           <p className="mt-1 text-dark-gray text-sm text-rig">
-            {charLim - des.length}/200
+            {charLim - des.length}/250
           </p>
           <p>Topics - (Helps is searching and ranking your blog post)</p>
           <div className="relative input-box pl-2 py-2 pb-4">
             <input
               type="text"
               placeholder="topics"
-              className="sticy input-box bg-white top-0 left-0 pl-4 mb-3"
+              className="sticky input-box bg-white top-0 left-0 pl-4 mb-3"
+              onKeyDown={handleTagAdd}
             />
-            <Tag tag="Testing Tag" />
+            {tags.map((tag, i) => {
+              return <Tag tag={tag} index={i} key={i} />;
+            })}
           </div>
         </div>
       </section>
