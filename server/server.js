@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 import mongoose from "mongoose";
 import "dotenv/config";
 import bcrypt from "bcrypt";
@@ -10,6 +10,11 @@ import admin from "firebase-admin";
 import fs from "fs";
 import { metaDataTable } from "./Schema/initialDb.js";
 import uploadRoute from "./upload.js";
+import { getAuth } from "firebase-admin/auth";
+
+// Schemas
+import User from "./Schema/User.js";
+import Blog from "./Schema/Blog.js";
 
 const serviceAccountKey = JSON.parse(
   fs.readFileSync(
@@ -19,12 +24,6 @@ const serviceAccountKey = JSON.parse(
     )
   )
 );
-
-import { getAuth } from "firebase-admin/auth";
-
-// Schemas
-import User from "./Schema/User.js";
-// import { use } from "react";
 
 const server = express();
 const PORT = process.env.BE_PORT || 3000;
@@ -55,6 +54,23 @@ const generateUsername = async (email) => {
   const exists = await User.exists({ "personal_info.username": username });
   if (exists) username += nanoid(5);
   return username;
+};
+
+const verifyJWT = (req, res, next) => {
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (token == null) {
+    return res.status(401).json({ error: "No Access Token Provided" });
+  }
+
+  jwt.verify(token, process.env.SECRET_ACCESS_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: "Access token is invalid" });
+    }
+    req.user = decoded.id;
+    next();
+  });
 };
 
 // Shape the data we send back to client
@@ -88,6 +104,7 @@ server.post("/signup", async (req, res, next) => {
     const { fullname, email, password } = req.body;
 
     // Validation
+
     if (!fullname || fullname.length < 3) {
       return res
         .status(403)
@@ -210,6 +227,96 @@ server.post("/google-auth", async (req, res) => {
       error:
         "Failed to authenticate with your Google account. Try again or use another method.",
     });
+  }
+});
+
+// CREATE BLOG
+server.post("/create-blog", verifyJWT, async (req, res) => {
+  try {
+    const authorId = req.user;
+
+    // Validate authorId
+    if (!mongoose.Types.ObjectId.isValid(authorId)) {
+      return res.status(400).json({ error: "Invalid author ID" });
+    }
+
+    let { title, banner, des, tags, content, draft } = req.body;
+
+    // Basic validations
+    if (!title || !title.trim().length) {
+      return res
+        .status(403)
+        .json({ error: "You must provide a title to publish the blog" });
+    }
+
+    if (!des || !des.trim().length || des.length > 200) {
+      return res.status(403).json({
+        error: "You must provide a blog description under 200 characters",
+      });
+    }
+
+    if (!banner || !banner.trim().length) {
+      return res
+        .status(403)
+        .json({ error: "You must provide a banner image to publish the blog" });
+    }
+
+    if (!content || !Array.isArray(content.blocks) || !content.blocks.length) {
+      return res
+        .status(403)
+        .json({ error: "There must be some blog content to publish" });
+    }
+
+    if (!tags || !Array.isArray(tags) || !tags.length || tags.length > 10) {
+      return res.status(403).json({
+        error: "You must provide between 1 and 10 tags to publish the blog",
+      });
+    }
+
+    // Normalize tags
+    tags = tags.map((tag) => tag.toLowerCase());
+
+    // Generate unique blog slug
+    const blog_id =
+      title
+        .replace(/[^a-zA-Z0-9]/g, " ")
+        .replace(/\s+/g, "-")
+        .trim() +
+      "-" +
+      nanoid();
+
+    // Create Blog document
+    const blog = new Blog({
+      title,
+      des,
+      banner,
+      content,
+      tags,
+      author: authorId,
+      blog_id,
+      activity: { draft: Boolean(draft) },
+    });
+
+    const savedBlog = await blog.save();
+
+    // Update User's total_posts and blogs array
+    const updatedUser = await User.findByIdAndUpdate(
+      authorId,
+      {
+        $inc: { "account_info.total_posts": draft ? 0 : 1 },
+        $push: { blogs: savedBlog._id }, // push the ObjectId, not slug
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({ id: blog_id });
+  } catch (err) {
+    console.error("🔥 Create Blog Error:", err);
+    return res.status(500).json({ error: "Failed to create blog" });
   }
 });
 
