@@ -23,6 +23,7 @@ const Tag = ({ tag, index }) => {
         const updatedTags = [...tags];
         updatedTags[index] = currentTag;
         setBlog({ ...blog, tags: updatedTags });
+        e.target.setAttribute("contentEditable", false);
       }
     }
   };

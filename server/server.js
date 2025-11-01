@@ -249,28 +249,34 @@ server.post("/create-blog", verifyJWT, async (req, res) => {
         .json({ error: "You must provide a title to publish the blog" });
     }
 
-    if (!des || !des.trim().length || des.length > 200) {
-      return res.status(403).json({
-        error: "You must provide a blog description under 200 characters",
-      });
-    }
+    if (!draft) {
+      if (!des || !des.trim().length || des.length > 200) {
+        return res.status(403).json({
+          error: "You must provide a blog description under 200 characters",
+        });
+      }
 
-    if (!banner || !banner.trim().length) {
-      return res
-        .status(403)
-        .json({ error: "You must provide a banner image to publish the blog" });
-    }
+      if (!banner || !banner.trim().length) {
+        return res.status(403).json({
+          error: "You must provide a banner image to publish the blog",
+        });
+      }
 
-    if (!content || !Array.isArray(content.blocks) || !content.blocks.length) {
-      return res
-        .status(403)
-        .json({ error: "There must be some blog content to publish" });
-    }
+      if (
+        !content ||
+        !Array.isArray(content.blocks) ||
+        !content.blocks.length
+      ) {
+        return res
+          .status(403)
+          .json({ error: "There must be some blog content to publish" });
+      }
 
-    if (!tags || !Array.isArray(tags) || !tags.length || tags.length > 10) {
-      return res.status(403).json({
-        error: "You must provide between 1 and 10 tags to publish the blog",
-      });
+      if (!tags || !Array.isArray(tags) || !tags.length || tags.length > 10) {
+        return res.status(403).json({
+          error: "You must provide between 1 and 10 tags to publish the blog",
+        });
+      }
     }
 
     // Normalize tags
@@ -304,7 +310,7 @@ server.post("/create-blog", verifyJWT, async (req, res) => {
       authorId,
       {
         $inc: { "account_info.total_posts": draft ? 0 : 1 },
-        $push: { blogs: savedBlog._id }, // push the ObjectId, not slug
+        $push: { blogs: savedBlog._id },
       },
       { new: true }
     );
