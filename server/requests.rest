@@ -1,16 +1,16 @@
-POST http://localhost:3000/create-blog
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MDRjODFkYzQ5OTI3YzA4ZThiY2E3NCIsImlhdCI6MTc2MTkyMTA1MywiZXhwIjoxNzYyNTI1ODUzfQ.TTaMmR4GcOXTJFihxGqnjraH3S3alXGKCwDVfKPCP64
+# POST http://localhost:3000/create-blog
+# Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MDRjODFkYzQ5OTI3YzA4ZThiY2E3NCIsImlhdCI6MTc2MTkyMTA1MywiZXhwIjoxNzYyNTI1ODUzfQ.TTaMmR4GcOXTJFihxGqnjraH3S3alXGKCwDVfKPCP64
 
-{
-  "title": "test title @ 3 :134 # 4$ 123 asdas 12,",
-  "banner": "https://example.com/image-url",
-  "des": "this is a short des",
-  "content": {
-    "blocks": [1, 2]
-  },
-  "tags": ["tag1", "tag2"]
-}
+# {
+#   "title": "test title @ 3 :134 # 4$ 123 asdas 12,",
+#   "banner": "https://example.com/image-url",
+#   "des": "this is a short des",
+#   "content": {
+#     "blocks": [1, 2]
+#   },
+#   "tags": ["tag1", "tag2"]
+# }
 
 # a_t = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MDRjODFkYzQ5OTI3YzA4ZThiY2E3NCIsImlhdCI6MTc2MTkyMTA1MywiZXhwIjoxNzYyNTI1ODUzfQ.TTaMmR4GcOXTJFihxGqnjraH3S3alXGKCwDVfKPCP64"
 
@@ -21,4 +21,5 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MDRjODFkY
 #      "fullname": "nati12343",
 #      "email":"natiboss@gmail.com",
 #      "password": "09@13And77"
-# }
+
+GET http://localhost:3000/latest-blogs
