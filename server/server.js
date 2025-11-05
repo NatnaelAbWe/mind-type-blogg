@@ -232,7 +232,7 @@ server.post("/google-auth", async (req, res) => {
 
 let maxLimit = 5;
 server.get("/latest-blogs", (req, res) => {
-  Blog.find({ draft: false })
+  Blog.find({ "activity.draft": false })
     .populate(
       "author",
       "personal_info.profile_img personal_info.username personal_info.fullname -_id"
