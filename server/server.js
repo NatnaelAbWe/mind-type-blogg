@@ -230,6 +230,24 @@ server.post("/google-auth", async (req, res) => {
   }
 });
 
+let maxLimit = 5;
+server.get("/latest-blogs", (req, res) => {
+  Blog.find({ draft: false })
+    .populate(
+      "author",
+      "personal_info.profile_img personal_info.username personal_info.fullname -_id"
+    )
+    .sort({ publishedAt: -1 })
+    .select("blog_id title des banner activity tags publishedAt -_id")
+    .limit(maxLimit)
+    .then((blogs) => {
+      return res.status(200).json({ blogs });
+    })
+    .catch((err) => {
+      return res.status(500).json({ error: err.message });
+    });
+});
+
 // CREATE BLOG
 server.post("/create-blog", verifyJWT, async (req, res) => {
   try {
@@ -329,6 +347,8 @@ server.post("/create-blog", verifyJWT, async (req, res) => {
 // img Upload route
 server.use("/uploads", express.static("uploads")); // serve uploaded files
 server.use(uploadRoute);
+
+// fetch blogg
 
 // ==================== ERROR HANDLER ==================== //
 server.use((err, req, res, next) => {
