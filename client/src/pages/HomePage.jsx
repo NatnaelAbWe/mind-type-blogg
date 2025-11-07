@@ -3,6 +3,7 @@ import AnimationWrapper from "../common/page-animation";
 import InPageNavigation from "../components/InPageNavigation";
 import heroImg from "../imgs/image-removebg-preview (6) 3.svg";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const HomePage = () => {
   const fetchLatestBlog = () => {
@@ -20,7 +21,7 @@ const HomePage = () => {
     fetchLatestBlog();
   }, []);
   const btnStyle =
-    "border-0 w-full md:w-[35%] py-3 rounded-full bg-blue-500 text-2xl text-white transition duration-300 ease-in-out active:bg-gray-500 active:animate-bounce";
+    "border-0 w-full md:w-[35%] py-3 rounded-full bg-blue-500 text-2xl text-white text-center transition duration-300 ease-in-out active:bg-gray-500 active:animate-bounce";
 
   return (
     <AnimationWrapper>
@@ -37,8 +38,12 @@ const HomePage = () => {
               reaches everyone, everywhere.
             </p>
             <div className="flex flex-col items-center justify-center md:flex-row gap-4 mt-10">
-              <button className={btnStyle}>Sign In</button>
-              <button className={btnStyle}>Sign Up</button>
+              <Link to="/signin" className={btnStyle}>
+                Sign In
+              </Link>
+              <Link to="/signup" className={btnStyle}>
+                Sign Up
+              </Link>
             </div>
           </div>
           <img
