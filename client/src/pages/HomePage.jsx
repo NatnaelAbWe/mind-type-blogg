@@ -1,16 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AnimationWrapper from "../common/page-animation";
 import InPageNavigation from "../components/InPageNavigation";
 import heroImg from "../imgs/image-removebg-preview (6) 3.svg";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import Loader from "../components/Loader";
+import BlogPostCard from "../components/BlogPost";
 
 const HomePage = () => {
+  let [blogs, setBlogs] = useState(null);
+
   const fetchLatestBlog = () => {
     axios
       .get(import.meta.env.VITE_SERVER_DOMAIN + "/latest-blogs")
       .then((blogs) => {
         console.log(blogs.data.blogs);
+        setBlogs(blogs.data.blogs);
       })
       .catch((err) => {
         console.log(err);
@@ -59,7 +64,27 @@ const HomePage = () => {
           <InPageNavigation
             routes={["home", "trending blogs"]}
             defaultHidden={["trending blogs"]}
-          ></InPageNavigation>
+          >
+            <>
+              {blogs === null ? (
+                <Loader />
+              ) : (
+                blogs.map((blog, i) => {
+                  return (
+                    <AnimationWrapper
+                      className={{ duration: 1, delay: i * 0.1 }}
+                      key={i}
+                    >
+                      <BlogPostCard
+                        content={blog}
+                        author={blog.author.personal_info}
+                      />
+                    </AnimationWrapper>
+                  );
+                })
+              )}
+            </>
+          </InPageNavigation>
         </div>
         {/* filters and trending blogs */}
         <div></div>
