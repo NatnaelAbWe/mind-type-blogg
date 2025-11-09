@@ -10,6 +10,7 @@ import { useContext } from "react";
 import { userContext } from "../App";
 import MinimalBlogPost from "../components/NoBannerBlogPost";
 import { activeTab } from "../components/InPageNavigation";
+import NoDataMessage from "../components/NoData";
 
 const HomePage = () => {
   const loadByCatagory = (e) => {
@@ -40,6 +41,7 @@ const HomePage = () => {
     "tech",
     "finances",
     "travel",
+    "tag1",
   ];
 
   const fetchBLogsByCatagory = () => {
@@ -71,7 +73,6 @@ const HomePage = () => {
     axios
       .get(import.meta.env.VITE_SERVER_DOMAIN + "/trending-blogs")
       .then((blogs) => {
-        // console.log(blogs.data.blogs);
         setTrendingBlogs(blogs.data.blogs);
       })
       .catch((err) => {
@@ -137,6 +138,10 @@ const HomePage = () => {
             <>
               {blogs === null ? (
                 <Loader />
+              ) : !blogs.length ? (
+                <NoDataMessage
+                  message={`No blogs published   with ${pageState} tag`}
+                />
               ) : (
                 blogs.map((blog, i) => {
                   return (
@@ -155,6 +160,8 @@ const HomePage = () => {
             </>
             {trendingBlogs === null ? (
               <Loader />
+            ) : !trendingBlogs.length ? (
+              <NoDataMessage message={`No Trending blogs published`} />
             ) : (
               trendingBlogs.map((blog, i) => {
                 return (
