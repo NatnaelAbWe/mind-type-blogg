@@ -22,4 +22,9 @@
 #      "email":"natiboss@gmail.com",
 #      "password": "09@13And77"
 
-GET http://localhost:3000/latest-blogs
+POST http://localhost:3000/search-blogs
+Content-Type: application/json
+
+{
+    "tags" : "tag3"
+}
