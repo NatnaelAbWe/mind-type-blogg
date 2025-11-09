@@ -42,6 +42,19 @@ const HomePage = () => {
     "travel",
   ];
 
+  const fetchBLogsByCatagory = () => {
+    axios
+      .post(import.meta.env.VITE_SERVER_DOMAIN + "/search-blogs", {
+        tags: pageState,
+      })
+      .then((blogs) => {
+        setBlogs(blogs.data.blogs);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   const fetchLatestBlog = () => {
     axios
       .get(import.meta.env.VITE_SERVER_DOMAIN + "/latest-blogs")
@@ -71,6 +84,8 @@ const HomePage = () => {
 
     if (pageState === "home") {
       fetchLatestBlog();
+    } else {
+      fetchBLogsByCatagory();
     }
     if (!trendingBlogs) {
       fetchTrendingBlog();
