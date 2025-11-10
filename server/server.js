@@ -254,8 +254,9 @@ server.get("/trending-blogs", (req, res) => {
 
 // leatest blogs
 
-let maxLimit = 5;
-server.get("/latest-blogs", (req, res) => {
+server.post("/latest-blogs", (req, res) => {
+  let maxLimit = 5;
+  let page = req.body;
   Blog.find({ "activity.draft": false })
     .populate(
       "author",
@@ -263,11 +264,25 @@ server.get("/latest-blogs", (req, res) => {
     )
     .sort({ publishedAt: -1 })
     .select("blog_id title des banner activity tags publishedAt -_id")
+    .skip(page - 1 * maxLimit)
     .limit(maxLimit)
     .then((blogs) => {
       return res.status(200).json({ blogs });
     })
     .catch((err) => {
+      return res.status(500).json({ error: err.message });
+    });
+});
+
+// all latest blogs count
+
+server.post("/all-latest-blogs-count", (req, res) => {
+  Blog.countDocuments({ draft: false })
+    .then((count) => {
+      return res.status(200).json({ totalDocs: count });
+    })
+    .catch((err) => {
+      console.log(err.message);
       return res.status(500).json({ error: err.message });
     });
 });
