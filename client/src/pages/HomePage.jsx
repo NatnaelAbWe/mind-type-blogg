@@ -11,6 +11,7 @@ import { userContext } from "../App";
 import MinimalBlogPost from "../components/NoBannerBlogPost";
 import { activeTab } from "../components/InPageNavigation";
 import NoDataMessage from "../components/NoData";
+import { filterPaginationData } from "../common/FilterPagination";
 
 const HomePage = () => {
   const loadByCatagory = (e) => {
@@ -57,16 +58,25 @@ const HomePage = () => {
       });
   };
 
-  const fetchLatestBlog = () => {
-    axios
-      .get(import.meta.env.VITE_SERVER_DOMAIN + "/latest-blogs")
-      .then((blogs) => {
-        // console.log(blogs.data.blogs);
-        setBlogs(blogs.data.blogs);
-      })
-      .catch((err) => {
-        console.log(err);
+  const fetchLatestBlog = async (page = 1) => {
+    try {
+      const { data } = await axios.post(
+        import.meta.env.VITE_SERVER_DOMAIN + "/latest-blogs",
+        { page }
+      );
+
+      const formattedData = await filterPaginationData({
+        state: blogs,
+        data: data.blogs,
+        page,
+        countRoute: "/all-latest-blogs-count",
       });
+
+      console.log("Formatted data:", formattedData);
+      setBlogs(formattedData);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchTrendingBlog = () => {
@@ -138,12 +148,12 @@ const HomePage = () => {
             <>
               {blogs === null ? (
                 <Loader />
-              ) : !blogs.length ? (
+              ) : !blogs.results?.length ? (
                 <NoDataMessage
                   message={`No blogs published   with ${pageState} tag`}
                 />
               ) : (
-                blogs.map((blog, i) => {
+                blogs.results.map((blog, i) => {
                   return (
                     <AnimationWrapper
                       className={{ duration: 1, delay: i * 0.1 }}

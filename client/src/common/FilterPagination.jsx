@@ -2,26 +2,29 @@ import axios from "axios";
 
 export const filterPaginationData = async ({
   create_new_arr = false,
-  state,
-  data,
-  page,
-  countRoute,
-  data_to_send,
+  state = null,
+  data = [],
+  page = 1,
+  countRoute = "",
+  data_to_send = {},
 }) => {
-  let obj;
+  try {
+    if (state && !create_new_arr) {
+      return {
+        ...state,
+        results: [...(state.results || []), ...data],
+        page,
+      };
+    }
 
-  if (state != null && !create_new_arr) {
-    obj = { ...state, results: [...state.results, ...data], page: page };
-  } else {
-    await axios
-      .post(import.meta.env.VITE_SERVER_DOMAIN + countRoute, data_to_send)
-      .then(({ data: { totalDocs } }) => {
-        obj = { results: data, page: 1, totalDocs };
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const { data: { totalDocs = 0 } = {} } = await axios.post(
+      `${import.meta.env.VITE_SERVER_DOMAIN}${countRoute}`,
+      data_to_send
+    );
+
+    return { results: data, page: 1, totalDocs: totalDocs };
+  } catch (err) {
+    console.error("Error in filterPaginationData:", err);
+    return state || { results: [], page: 1, totalDocs: 0 };
   }
-
-  return obj;
 };
