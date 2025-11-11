@@ -277,7 +277,7 @@ server.post("/latest-blogs", (req, res) => {
 // all latest blogs count
 
 server.post("/all-latest-blogs-count", (req, res) => {
-  Blog.countDocuments({ draft: false })
+  Blog.countDocuments({ "activity.draft": false })
     .then((count) => {
       return res.status(200).json({ totalDocs: count });
     })
