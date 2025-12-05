@@ -7,6 +7,9 @@ import { lookInSession } from "./common/session";
 import UserNavigationPanel from "./components/UserNavigation";
 import Editor from "./pages/Editor";
 import HomePage from "./pages/HomePage";
+import NoPage from "./components/404";
+import BlogPostCard from "./components/BlogPost";
+import BlogPage from "./components/BlogPage";
 
 export const userContext = createContext({});
 
@@ -28,6 +31,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="/signin" element={<UserAuthForm type="signin" />} />
           <Route path="/signup" element={<UserAuthForm type="signup" />} />
+          <Route path="/blog/:id" element={<BlogPage />} />
         </Route>
       </Routes>
     </userContext.Provider>
