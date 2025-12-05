@@ -276,6 +276,7 @@ server.post("/latest-blogs", (req, res) => {
 // GET /blog/:id
 server.get("/blog/:id", async (req, res) => {
   const { id } = req.params;
+  console.log(req.params);
 
   try {
     const blog = await Blog.findOne({ blog_id: id }).populate(
