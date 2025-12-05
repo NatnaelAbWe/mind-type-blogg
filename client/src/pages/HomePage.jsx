@@ -52,6 +52,8 @@ const HomePage = () => {
       })
       .then((blogs) => {
         setBlogs(blogs.data.blogs);
+        console.log(blogs.blog_id);
+        console.log(blogs.author.personal_info);
       })
       .catch((err) => {
         console.log(err);
@@ -121,7 +123,7 @@ const HomePage = () => {
               <br /> Designed with accessibility at its core, so your voice
               reaches everyone, everywhere.
             </p>
-            <div className="flex flex-col items-center justify-center md:flex-row gap-4 mt-10">
+            <div className="flex flex-col items-center justify-center md:flex-row gap-4 my-10">
               <Link to="/signin" className={btnStyle}>
                 Sign In
               </Link>

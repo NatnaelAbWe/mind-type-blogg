@@ -273,6 +273,23 @@ server.post("/latest-blogs", (req, res) => {
       return res.status(500).json({ error: err.message });
     });
 });
+// GET /blog/:id
+server.get("/blog/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const blog = await Blog.findOne({ blog_id: id }).populate(
+      "author",
+      "personal_info.profile_img personal_info.username personal_info.fullname -_id"
+    );
+
+    if (!blog) return res.status(404).json({ error: "Blog not found" });
+
+    res.json({ blog });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // all latest blogs count
 
