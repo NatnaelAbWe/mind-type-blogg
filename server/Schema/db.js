@@ -3,28 +3,24 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// create a connection pool
 export const dbPool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
+  host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD || "",
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
-  maxIdle: 10,
-  idleTimeout: 60000,
   queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  multipleStatements: true,
+  ssl: {
+    rejectUnauthorized: false, // Filess.io requires SSL
+  },
 });
-
-// test database connection on startup
 
 (async () => {
   try {
     const connection = await dbPool.getConnection();
-    console.log("MYSQL connected sucessfully");
+    console.log("MYSQL connected successfully");
     connection.release();
   } catch (err) {
     console.error("MYSQL connection failed:", err.message);

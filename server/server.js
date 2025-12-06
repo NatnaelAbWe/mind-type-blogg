@@ -16,22 +16,17 @@ import { getAuth } from "firebase-admin/auth";
 import User from "./Schema/User.js";
 import Blog from "./Schema/Blog.js";
 
+// Firebase Admin initialization
 const serviceAccountKey = JSON.parse(
-  fs.readFileSync(
-    new URL(
-      "./mind-type-blogg-webapp-firebase-adminsdk-fbsvc-409a813759.json",
-      import.meta.url
-    )
-  )
+  Buffer.from(process.env.FIREBASE_ADMIN_KEY_BASE64, "base64").toString()
 );
 
-const server = express();
-const PORT = process.env.BE_PORT || 3000;
-
-// intialize firebase Admin
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountKey),
 });
+
+const server = express();
+const PORT = process.env.PORT || 3000;
 
 // Validation regex
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -45,8 +40,8 @@ dns.setDefaultResultOrder("ipv4first");
 // Connect to MongoDB
 mongoose
   .connect(process.env.DB_LOCATION, { autoIndex: true })
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // Generate username from email
 const generateUsername = async (email) => {
@@ -82,7 +77,7 @@ const formDatatoSend = (user) => {
   const accessToken = jwt.sign(
     { id: user._id },
     process.env.SECRET_ACCESS_KEY,
-    { expiresIn: "7d" } // optional: 7-day expiry
+    { expiresIn: "7d" }
   );
 
   return {
@@ -222,7 +217,7 @@ server.post("/google-auth", async (req, res) => {
     // Respond once — success
     return res.status(200).json(formDatatoSend(user));
   } catch (err) {
-    console.error("🔥 Google Auth Error:", err.message);
+    console.error("Google Auth Error:", err.message);
     return res.status(500).json({
       error:
         "Failed to authenticate with your Google account. Try again or use another method.",

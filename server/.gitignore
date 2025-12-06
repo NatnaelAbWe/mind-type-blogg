@@ -3,4 +3,6 @@ node_modules/
 *.json
 upload
 requests.rest
+mind-type-blogg-webapp-firebase-adminsdk.json
+
 
