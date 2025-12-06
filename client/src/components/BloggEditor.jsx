@@ -73,7 +73,7 @@ export default function BloggEditor() {
 
     try {
       const res = await axios.post(
-        "https://mind-blog-backend-production.up.railway.app/upload",
+        import.meta.env.VITE_SERVER_DOMAIN + "/upload",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
