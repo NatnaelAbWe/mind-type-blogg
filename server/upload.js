@@ -1,60 +1,56 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
+import { unlink } from "fs/promises";
+import cloudinary from "./config/cloudinary.js";
 import { dbPool } from "./Schema/db.js";
-import { nanoid } from "nanoid";
 
 const router = express.Router();
-// console.log(nanoid());
 
-router.use("/upload", express.static("upload"));
+// Multer temporary memory storage (no local files)
+const upload = multer({ storage: multer.memoryStorage() });
 
-// set up multer storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./upload");
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = nanoid() + "-" + Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
-  },
-});
-
-const upload = multer({ storage });
-
+// POST /upload — upload banner to Cloudinary
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    const file = req.file;
-    if (!file) {
-      return res.status(400).json({ message: "no file uploaded" });
-    }
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    const fileUrl = `${req.protocol}://${req.get("host")}/upload/${
-      file.filename
-    }`;
+    // Upload buffer to Cloudinary
+    const result = await cloudinary.uploader.upload_stream(
+      { folder: "banners" },
+      async (error, result) => {
+        if (error) return res.status(500).json({ error: error.message });
 
-    const query = `
-        INSERT INTO uploads (filename, file_type, file_size, file_path, uploaded_by) VALUES(?,?,?,?,?);`;
+        const imageUrl = result.secure_url;
 
-    const values = [
-      file.filename,
-      file.mimetype,
-      file.size,
-      fileUrl,
-      req.body.uploadedby || null,
-    ];
+        // Save metadata in MySQL (optional)
+        const query = `
+          INSERT INTO uploads (filename, file_type, file_size, file_path, uploaded_by)
+          VALUES (?, ?, ?, ?, ?)
+        `;
+        const values = [
+          result.public_id,
+          req.file.mimetype,
+          req.file.size,
+          imageUrl,
+          req.body.uploadedby || null,
+        ];
 
-    await dbPool.execute(query, values);
+        await dbPool.execute(query, values);
 
-    res.json({
-      message: "✅ File uploaded and metadata saved successfully!",
-      url: fileUrl,
-      file: {
-        name: file.filename,
-        type: file.mimetype,
-        size: file.size,
-      },
-    });
+        res.json({
+          message: "File uploaded successfully to Cloudinary!",
+          url: imageUrl,
+          file: {
+            name: result.public_id,
+            type: req.file.mimetype,
+            size: req.file.size,
+          },
+        });
+      }
+    );
+
+    // Pipe buffer to Cloudinary
+    result.end(req.file.buffer);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error", error: err.message });
