@@ -22,11 +22,15 @@ const uploadImageByFile = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await axios.post("http://localhost:3000/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const res = await axios.post(
+      import.meta.env.VITE_SERVER_DOMAIN + "/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
     return {
       success: 1,
